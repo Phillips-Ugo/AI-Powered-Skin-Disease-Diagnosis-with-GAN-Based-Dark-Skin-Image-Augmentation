@@ -1,1 +1,52 @@
-*.env 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# Model files (large)
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data files (large)
+HAM10000/
+*.csv
+*.zip
+
+# Temporary files
+*.tmp
+*.log
+diagnosis_history.csv
+
+# Paper compilation
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz

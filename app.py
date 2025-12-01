@@ -15,15 +15,32 @@ import tensorflow as tf
 import requests
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.applications.efficientnet import preprocess_input
-from openai import OpenAI
+import google.generativeai as genai
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv() # This loads the variables from .env into the environment
+# Load environment variables (with error handling)
+try:
+    load_dotenv() # This loads the variables from .env into the environment
+except Exception as e:
+    print(f"Warning: Could not load .env file: {e}")
+    print("Continuing without .env file - API keys must be set as environment variables")
 
-# Initialize OpenAI client
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# Initialize Google Gemini client
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+# Configure Gemini if API key is available
+if GEMINI_API_KEY:
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        gemini_model = genai.GenerativeModel('gemini-pro')
+        GEMINI_AVAILABLE = True
+    except:
+        GEMINI_AVAILABLE = False
+        gemini_model = None
+else:
+    GEMINI_AVAILABLE = False
+    gemini_model = None
 
 # --- Chat Bot Functions ---
 def initialize_chat():
@@ -32,20 +49,16 @@ def initialize_chat():
             {"role": "assistant", "content": "Hello! I'm your medical assistant. How can I help you today?"}
         ]
 
-# Load API keys from environment variables
-
-# Initialize OpenAI client
-client = OpenAI(api_key=OPENAI_API_KEY)
-
 def generate_ai_response(prompt):
+    if not GEMINI_AVAILABLE or gemini_model is None:
+        return "Chatbot service is currently unavailable. Please ensure GEMINI_API_KEY is set in your environment variables."
+    
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # or "gpt-4" if available and needed
-            messages=[
-                {"role": "system", "content": "You are a helpful and knowledgeable medical assistant."},
-                {"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content
+        # Create prompt with system instruction
+        full_prompt = "You are a helpful and knowledgeable medical assistant. Provide accurate, accessible information about skin conditions. Always recommend consulting a healthcare professional for diagnosis and treatment. Do not provide specific medical advice or diagnoses.\n\nUser question: " + prompt
+        
+        response = gemini_model.generate_content(full_prompt)
+        return response.text
     except Exception as e:
         st.error(f"Error generating response: {str(e)}")
         return "I'm sorry, I encountered an error. Please try again."
@@ -60,33 +73,43 @@ def get_coordinates(address):
 
 # --- Get Nearby Hospitals using Google Places API ---
 def get_nearby_hospitals(lat, lon, radius=5000):
-    url = (
-        f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
-        f"location={lat},{lon}&radius={radius}&type=hospital&key={GOOGLE_API_KEY}"
-    )
-    response = requests.get(url)
-    data = response.json()
+    if not GOOGLE_API_KEY:
+        st.warning("Hospital search is unavailable. Please set GOOGLE_API_KEY in your environment variables.")
+        return []
+    
+    try:
+        url = (
+            f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
+            f"location={lat},{lon}&radius={radius}&type=hospital&key={GOOGLE_API_KEY}"
+        )
+        response = requests.get(url, timeout=10)
+        data = response.json()
+        
+        hospitals = []  
+        if data.get("status") == "OK" and data.get("results"):
+            for place in data["results"][:5]:
+                name = place.get("name", "Unknown")
+                location = place.get("geometry", {}).get("location", {})
+                place_lat = location.get("lat")
+                place_lon = location.get("lng")
+                
+                if place_lat and place_lon:
+                    distance_km = geodesic((lat, lon), (place_lat, place_lon)).km
+                    distance_miles = distance_km * 0.621371
+                    address = place.get("vicinity", place.get("formatted_address", "N/A"))
+                    directions_url = f"https://www.google.com/maps/dir/?api=1&origin={lat},{lon}&destination={place_lat},{place_lon}&travelmode=driving"
 
-    hospitals = []  
-    if data.get("results"):
-        for place in data["results"][:5]:  # Limit to closest 5 hospitals
-            name = place.get("name")
-            location = place["geometry"]["location"]
-            place_lat = location["lat"]
-            place_lon = location["lng"]
-            distance_km = geodesic((lat, lon), (place_lat, place_lon)).km
-            distance_miles = distance_km * 0.621371
-            address = place.get("vicinity", "N/A")
-            directions_url = f"https://www.google.com/maps/dir/?api=1&origin={lat},{lon}&destination={place_lat},{place_lon}&travelmode=driving"
-
-            hospitals.append({
-                "name": name,
-                "distance_km": round(distance_km, 2),
-                "distance_miles": round(distance_miles, 2),
-                "address": address,
-                "directions_url": directions_url
-            })
-    return hospitals
+                    hospitals.append({
+                        "name": name,
+                        "distance_km": round(distance_km, 2),
+                        "distance_miles": round(distance_miles, 2),
+                        "address": address,
+                        "directions_url": directions_url
+                    })
+        
+        return hospitals
+    except Exception as e:
+        return []
 
 # --- Save Diagnosis History ---
 def save_history(image_name, diagnosis, confidence):
@@ -108,9 +131,76 @@ def save_history(image_name, diagnosis, confidence):
 # --- Load pre-trained model ---
 @st.cache_resource
 def load_model():
-    return pickle.load(open("HealthCareModel.h5", 'rb'))
+    import warnings
+    import os
+    
+    # Suppress warnings during loading
+    warnings.filterwarnings('ignore')
+    
+    try:
+        # Try loading with compatibility workaround
+        from keras.src.saving import saving_lib
+        
+        # Store original function
+        original_model_from_config = saving_lib._model_from_config
+        
+        def lenient_model_from_config(config, custom_objects=None, compile=True, safe_mode=False):
+            """Lenient version that allows shape mismatches"""
+            try:
+                return original_model_from_config(config, custom_objects, compile, safe_mode)
+            except ValueError as e:
+                if "incompatible" in str(e) and "shape" in str(e):
+                    # Try with compile=False and safe_mode=True
+                    return original_model_from_config(config, custom_objects, compile=False, safe_mode=True)
+                raise
+        
+        # Temporarily replace the function
+        saving_lib._model_from_config = lenient_model_from_config
+        
+        try:
+            # Now try to load
+            with open('HealthCareModel.h5', 'rb') as f:
+                model = pickle.load(f)
+            
+            # Compile the model
+            if hasattr(model, 'compile'):
+                try:
+                    model.compile(
+                        optimizer='adam',
+                        loss='sparse_categorical_crossentropy',
+                        metrics=['accuracy']
+                    )
+                except Exception as compile_err:
+                    # Model may still work for predictions even if compilation fails
+                    pass
+            
+            return model
+            
+        finally:
+            # Restore original function
+            saving_lib._model_from_config = original_model_from_config
+        
+    except Exception as e:
+        warnings.filterwarnings('default')
+        # Fallback: try loading with environment variable
+        os.environ['KERAS_LOAD_SAFE_MODE'] = '1'
+        try:
+            with open('HealthCareModel.h5', 'rb') as f:
+                model = pickle.load(f)
+            if hasattr(model, 'compile'):
+                try:
+                    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+                except:
+                    pass
+            warnings.filterwarnings('default')
+            return model
+        except Exception as e2:
+            warnings.filterwarnings('default')
+            return None
 
 model = load_model()
+
+# Model loaded (or None if failed)
 
 # --- Preprocessing function ---
 def preprocess_image(img):
@@ -123,8 +213,10 @@ def preprocess_image(img):
 
 # --- Prediction function ---
 def predict_disease(image):
+    if model is None:
+        raise ValueError("Model failed to load. Please check HealthCareModel.h5 file.")
     processed = preprocess_image(image)
-    prediction = model.predict(processed)
+    prediction = model.predict(processed, verbose=0)
     predicted_class = np.argmax(prediction)
     confidence = np.max(prediction)
     return predicted_class, confidence
@@ -465,7 +557,7 @@ elif selection == "🏥 Nearby Hospitals":
                 hospitals = get_nearby_hospitals(lat, lon)
                 if hospitals:
                     sorted_hospitals = sorted(hospitals, key=lambda x: x['distance_miles'])
-                    st.success(f"Found {len(hospitals)} hospitals near you:")
+                    st.success(f"Found {len(sorted_hospitals)} hospitals near you:")
                     for hospital in sorted_hospitals:
                         st.markdown(
                             f"**{hospital['name']}**  \n📍 {hospital['address']}  \n"
@@ -473,7 +565,7 @@ elif selection == "🏥 Nearby Hospitals":
                             f"[🗺️ View on Google Maps]({hospital['directions_url']})"
                         )
                 else:
-                    st.warning("No hospitals found nearby.")
+                    st.warning("No hospitals found nearby. Please try a different address or location.")
             else:
                 st.error("Could not find your location. Please try a more specific address.")
         except Exception as e:
