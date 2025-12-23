@@ -1,0 +1,54 @@
+Dear Editor-in-Chief and Editorial Board of AI in Medicine,
+
+I am pleased to submit our manuscript entitled "DCGAN-Based Dark Skin Image Augmentation for Improving Dermatology Classifier Fairness: An End-to-End Clinical Decision Support System" for consideration for publication in AI in Medicine.
+
+SIGNIFICANCE AND CONTRIBUTION TO AI IN MEDICINE
+
+This work directly addresses a critical challenge in medical AI: algorithmic bias in dermatology classification systems that disproportionately affects dark-skinned populations. Our research demonstrates how strategic data augmentation and resampling can improve both accuracy and fairness in medical image classification—core concerns for deploying AI systems in clinical settings.
+
+Our study makes several key contributions to the field of AI in Medicine:
+
+1. **Clinical Impact**: We achieve 85% accuracy on 7-class skin lesion classification while reducing demographic disparities (Equalized Odds difference: 0.13 → 0.07), directly addressing the clinical need for equitable diagnostic tools that work across diverse patient populations.
+
+2. **Practical Deployment**: We deploy a complete, production-ready clinical decision support system integrating EfficientNetB0 diagnosis, Gemini-powered patient education, and geolocation-based care navigation—demonstrating end-to-end translation from research to accessible healthcare tools.
+
+3. **Evidence-Based Guidelines**: Through systematic investigation with limited training data (40 dark-skin images), we establish minimum data requirements (>100-200 samples) for effective medical GAN augmentation, providing actionable guidance for practitioners facing similar data scarcity challenges.
+
+4. **Fairness-Accuracy Tradeoffs**: Our findings reveal nuanced tradeoffs between overall accuracy and demographic equity, with important implications for clinical deployment decisions in diverse populations—a critical consideration for medical AI practitioners.
+
+FIT WITH JOURNAL SCOPE
+
+This manuscript aligns perfectly with the scope of AI in Medicine, as it:
+
+- Addresses algorithmic bias and fairness in medical AI systems—a pressing concern as AI tools are deployed in clinical settings
+- Demonstrates practical application of deep learning (EfficientNetB0) and generative models (DCGAN) for medical image analysis
+- Provides a complete clinical decision support system with real-world deployment considerations
+- Evaluates performance using rigorous statistical methods and fairness metrics relevant to medical AI
+- Addresses data availability and reproducibility concerns through open-source codebase and public dataset usage
+
+Our work builds on established foundations in medical AI (e.g., dermatologist-level classification by Esteva et al., 2017) while addressing critical gaps in fairness and demographic representation that have been highlighted by recent research (Daneshjou et al., 2022; Kinyanjui et al., 2020).
+
+CONTEXT WITHIN EXISTING LITERATURE
+
+While prior work has demonstrated high accuracy in dermatology AI, our study is among the first to systematically investigate fairness interventions with limited training data. We bridge gaps between:
+- Research on bias in medical AI (Obermeyer et al., 2019; Daneshjou et al., 2022) and practical mitigation strategies
+- GAN-based augmentation for medical imaging (Frid-Adar et al., 2018) and minimum data requirements for effectiveness
+- High-performance classifiers (Tschandl et al., 2018; Kassem et al., 2020) and deployment-ready clinical decision support systems
+
+Our findings provide evidence-based guidance that will benefit the medical AI community facing similar challenges with underrepresented populations and limited training data.
+
+REQUIRED STATEMENTS
+
+We confirm that neither the manuscript nor any parts of its content are currently under consideration for publication with or published in another journal.
+
+All authors have approved the manuscript and agree with its submission to AI in Medicine.
+
+Thank you for considering our manuscript for publication. We look forward to contributing to the important conversation about fairness and equity in medical AI systems.
+
+Sincerely,
+
+Ogwumike Ugochukwu Belusochim Phillips
+Corresponding Author
+Illinois Institute of Technology
+bogwumike@hawk.illinoistech.edu
+

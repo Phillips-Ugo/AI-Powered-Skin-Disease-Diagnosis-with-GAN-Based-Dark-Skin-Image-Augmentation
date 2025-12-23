@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<article>
+  <front>
+    <article-meta>
+      <title-group>
+        <article-title>DCGAN-Based Dark Skin Image Augmentation for Improving Dermatology Classifier Fairness: An End-to-End Clinical Decision Support System</article-title>
+      </title-group>
+      
+      <contrib-group>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Phillips</surname>
+            <given-names>Ogwumike Ugochukwu Belusochim</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff1">1</xref>
+          <xref ref-type="corresp" rid="cor1">*</xref>
+          <contrib-id contrib-id-type="orcid">0009-0006-0048-5767</contrib-id>
+        </contrib>
+      </contrib-group>
+      
+      <aff id="aff1">
+        <label>1</label>
+        <institution>Illinois Institute of Technology</institution>
+        <addr-line>
+          <city>Chicago</city>
+          <state>IL</state>
+          <country>USA</country>
+        </addr-line>
+        <email>bogwumike@hawk.illinoistech.edu</email>
+      </aff>
+      
+      <author-notes>
+        <corresp id="cor1">
+          <label>*</label>
+          <email>bogwumike@hawk.illinoistech.edu</email>
+        </corresp>
+      </author-notes>
+      
+      <abstract>
+        <p>Despite achieving dermatologist-level accuracy, deep learning models for skin lesion classification exhibit persistent performance disparities across skin tones, with dark-skinned individuals (Fitzpatrick IV--VI) experiencing significantly lower diagnostic accuracy due to severe underrepresentation in training datasets like HAM10000 (&lt;5% dark-skin samples). We present a comprehensive approach to fair skin lesion classification that achieves 85% accuracy through strategic class resampling and demonstrates improved demographic equity. Our EfficientNetB0 classifier, trained on HAM10000's 7-class dataset with resampling to 5,000 samples per class, achieves strong baseline performance (85% accuracy, 0.85 macro-F1) while addressing severe class imbalance (58:1 ratio). Through systematic evaluation including fairness metrics, we show that our approach reduces performance disparities: GAN-augmented models improve fairness (Equalized Odds difference: 0.13 → 0.07) by enhancing dark-skin performance, though with a tradeoff in overall accuracy. We investigate DCGAN-based synthetic augmentation with 40 identified dark-skin training images, generating 3,500 synthetic samples (500 per disease class), and establish minimum data requirements for effective medical image synthesis. Our findings demonstrate that strategic resampling provides a robust foundation for fair dermatology AI, while synthetic augmentation requires careful validation. We deploy our complete pipeline as an integrated clinical decision support system with Gemini-powered patient education and geolocation-based care navigation, demonstrating practical translation from research to accessible healthcare tools.</p>
+      </abstract>
+      
+      <kwd-group>
+        <kwd>medical imaging</kwd>
+        <kwd>generative adversarial networks</kwd>
+        <kwd>fairness in AI</kwd>
+        <kwd>dermatology</kwd>
+        <kwd>skin lesion classification</kwd>
+        <kwd>dataset bias</kwd>
+        <kwd>clinical decision support systems</kwd>
+        <kwd>data augmentation</kwd>
+        <kwd>EfficientNet</kwd>
+        <kwd>demographic equity</kwd>
+      </kwd-group>
+    </article-meta>
+  </front>
+</article>
+
